@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="approval">
+
+	<!-- 기안문서식 - 문서번호 가져오기 -->
+	<select id="getFileNo" resultType="int">
+		SELECT last_number
+		FROM user_sequences 
+		WHERE sequence_name = 'SEQ_APPROVAL'
+	</select>
+	
+	
+	<!-- 모달창에 입력될 전체 사원명 가져오기 -->
+	<select id="getMemberList" resultType="com.spring.groupware.member.model.MemberVO">	
+		select mbr_name, rank_detail, dept_detail
+		from 
+		(        
+		select mbr_name, fk_rank_no, fk_dept_no
+		from tbl_mbr
+		)A left join tbl_dept B
+		on fk_dept_no = dept_no
+		join tbl_rank C
+		on fk_rank_no = rank_no
+		order by dept_detail, rank_detail
+	</select>
+	
+	
+	<!-- 첨부파일 없는 결재요청 -->
+	<insert id="submitApproval" parameterType="com.spring.groupware.approval.model.ApprovalVO" >
+		insert into tbl_approval(ap_seq, fk_apform_no, fk_mbr_seq, ap_title, ap_contents, ap_approver, ap_manage_approver, ap_referrer)
+		values(seq_approval.nextval, to_number(#{fk_apform_no}), #{fk_mbr_seq}, #{ap_title}, #{ap_contents}, #{ap_approver}, #{ap_manage_approver}, #{ap_referrer})
+	</insert>
+	
+	
+	<!-- 결재요청 첨부파일 저장하기 -->
+	<insert id="submitAttachedApproval" parameterType="HashMap">	
+		insert into tbl_ap_attached(fk_ap_seq, ap_filename, ap_detail_filename, ap_fileSize)
+		values (#{fk_ap_seq}, #{ap_filename}, #{ap_detail_filename}, #{ap_fileSize})
+	</insert>
+
+
+	<!-- 결재대기 문서 가져오기 -->
+	<select id="getApprovalNeededList" parameterType="HashMap" resultType="com.spring.groupware.approval.model.ApprovalVO">	
+		select ap_seq, fk_apform_no, fk_mbr_seq, ap_dept, ap_progress, ap_title, ap_contents, ap_approver, ap_manage_approver
+		     , ap_referrer, ap_start_day, apform_name, mbr_name
+		from 
+		( 
+		    select rownum AS rno, ap_seq, fk_apform_no, fk_mbr_seq, ap_dept, ap_progress, ap_title, ap_contents, ap_approver, ap_manage_approver
+		         , ap_referrer, ap_start_day, apform_name, mbr_name
+		    from 
+		    (        
+		        select ap_seq, fk_apform_no, fk_mbr_seq, ap_progress, ap_title, ap_contents, ap_approver, ap_manage_approver
+		             , ap_referrer, to_char(ap_start_day,'YYYY-MM-DD') as ap_start_day, ap_dept
+		        from tbl_approval
+		    )A left join 
+		    (
+		        select apform_name, apform_no from tbl_apform
+		    ) B
+		    on fk_apform_no = apform_no
+		    left join tbl_mbr
+		    on fk_mbr_seq = mbr_seq
+		    where ap_manage_approver=#{managePerson} and ap_progress=0 
+		    <if test='word!=""'>
+		        and (ap_title like '%'||#{word}||'%' or ap_contents like '%'||#{word}||'%')
+		    </if>
+		    <if test='writer!=""'>
+		        and mbr_name like '%'||#{writer}||'%'
+		    </if>
+		    <if test='submitStartDate!=""'>
+		        and <![CDATA[ ap_start_day >= to_date(#{submitStartDate}, 'YYYY-MM-DD' ) ]]>
+		    </if>
+		    <if test='submitEndDate!=""'>
+		        and <![CDATA[ ap_start_day <= to_date(#{submitEndDate}, 'YYYY-MM-DD') ]]>
+		    </if>
+		    order by ap_start_day desc
+		)C
+		where rno between #{startRno} and #{endRno}
+	</select>
+	
+	
+	<!-- 결재요청한 문서 가져오기 -->
+	<select id="getApprovalSubmitList" parameterType="String" resultType="com.spring.groupware.approval.model.ApprovalVO">	
+		select ap_seq, fk_apform_no, fk_mbr_seq, ap_dept, ap_progress, ap_title, ap_contents, ap_approver, ap_manage_approver
+		     , ap_referrer, ap_start_day, ap_end_day, apform_name, mbr_name
+		from 
+		( 
+		    select rownum AS rno, ap_seq, fk_apform_no, fk_mbr_seq, ap_dept, ap_progress, ap_title, ap_contents, ap_approver, ap_manage_approver
+		         , ap_referrer, ap_start_day, ap_end_day, apform_name, mbr_name
+		    from 
+		    (        
+		        select ap_seq, fk_apform_no, fk_mbr_seq, ap_progress, ap_title, ap_contents, ap_approver, ap_manage_approver
+		             , ap_referrer, to_char(ap_start_day,'YYYY-MM-DD') as ap_start_day, to_char(ap_end_day,'YYYY-MM-DD') as ap_end_day, ap_dept
+		        from tbl_approval
+		    )A left join 
+		    (
+		        select apform_name, apform_no from tbl_apform
+		    ) B
+		    on fk_apform_no = apform_no
+		    left join tbl_mbr
+		    on fk_mbr_seq = mbr_seq
+		    where fk_mbr_seq=#{fk_mbr_seq} 
+		    <if test='word!=""'>
+		        and (ap_title like '%'||#{word}||'%' or ap_contents like '%'||#{word}||'%')
+		    </if>
+		    <choose>
+		    	<when test='status=="0"'>and ap_progress=0</when>
+		    	<when test='status=="1"'>and ap_progress=1</when>
+		    	<when test='status=="2"'>and ap_progress=2</when>
+		    	<otherwise> </otherwise>
+		    </choose>
+		    <if test='submitStartDate!=""'>
+		        and <![CDATA[ ap_start_day >= to_date(#{submitStartDate}, 'YYYY-MM-DD' ) ]]>
+		    </if>
+		    <if test='submitEndDate!=""'>
+		        and <![CDATA[ ap_start_day <= to_date(#{submitEndDate}, 'YYYY-MM-DD' )]]>
+		    </if>
+		    order by ap_start_day desc
+		)C
+		where rno between #{startRno} and #{endRno}
+	</select>
+	
+	
+	<!-- 결재참조된 문서 가져오기 -->
+	<select id="getApprovalReferredList" parameterType="String" resultType="com.spring.groupware.approval.model.ApprovalVO">	
+		select ap_seq, fk_apform_no, fk_mbr_seq, ap_dept, ap_progress, ap_title, ap_contents, ap_approver, ap_manage_approver
+		     , ap_referrer, ap_start_day, apform_name, mbr_name
+		from 
+		( 
+		    select rownum AS rno, ap_seq, fk_apform_no, fk_mbr_seq, ap_dept, ap_progress, ap_title, ap_contents, ap_approver, ap_manage_approver
+		         , ap_referrer, ap_start_day, apform_name, mbr_name
+		    from 
+		    (        
+		        select ap_seq, fk_apform_no, fk_mbr_seq, ap_progress, ap_title, ap_contents, ap_approver, ap_manage_approver
+		             , ap_referrer, to_char(ap_start_day,'YYYY-MM-DD') as ap_start_day, ap_dept
+		        from tbl_approval
+		    )A left join 
+		    (
+		        select apform_name, apform_no from tbl_apform
+		    ) B
+		    on fk_apform_no = apform_no
+		    left join tbl_mbr
+		    on fk_mbr_seq = mbr_seq
+		    where ap_referrer like '%'||#{managePerson}||'%'
+		    <if test='word!=""'>
+		        and (ap_title like '%'||#{word}||'%' or ap_contents like '%'||#{word}||'%')
+		    </if>
+		    <if test='writer!=""'>
+		        and mbr_name like '%'||#{writer}||'%'
+		    </if>
+		    <if test='submitStartDate!=""'>
+		        and <![CDATA[ ap_start_day >= to_date(#{submitStartDate}, 'YYYY-MM-DD' ) ]]>
+		    </if>
+		    <if test='submitEndDate!=""'>
+		        and <![CDATA[ ap_start_day <= to_date(#{submitEndDate}, 'YYYY-MM-DD' )]]>
+		    </if>
+		    order by ap_start_day desc
+		)C
+		where rno between #{startRno} and #{endRno}
+	</select>
+	
+	
+	<!-- 결재 작성내용 불러오기 -->
+	<select id="getApproval" parameterType="String" resultType="com.spring.groupware.approval.model.ApprovalVO">	
+		select ap_seq, fk_apform_no, fk_mbr_seq, ap_progress, ap_title, ap_contents ,ap_approver, ap_manage_approver, ap_referrer, ap_start_day, ap_dept, mbr_name
+		from
+			(select ap_seq, fk_apform_no, fk_mbr_seq, ap_progress, ap_title, ap_contents ,ap_approver, ap_manage_approver, ap_referrer, ap_start_day, ap_dept
+			from tbl_approval) V
+			left join tbl_mbr
+			on fk_mbr_seq = mbr_seq
+		where ap_seq=#{ap_seq}
+	</select>
+	
+	
+	<!-- 결재승인하기 -->
+	<update id="approvalConfirm" parameterType="HashMap">
+		<if test='ap_progress=="0"'>
+	        update tbl_approval set ap_manage_approver=#{ap_next_approver}
+			where ap_seq=#{ap_seq}
+	    </if>
+	    <if test='ap_progress=="1"'>
+	        update tbl_approval set ap_progress=#{ap_progress}, ap_end_day=sysdate
+			where ap_seq=#{ap_seq}
+	    </if>
+	</update>
+	
+	
+	<!-- 결재삭제하기 -->
+	<delete id="approvalDelete" parameterType="String">
+		delete from tbl_approval
+		where ap_seq=#{ap_seq}
+	</delete>	
+	
+</mapper>

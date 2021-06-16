@@ -1,0 +1,174 @@
+@charset "UTF-8";
+
+div.snsmaincontainer {
+	border: 1px solid black;
+	display: inline-block;
+	width: 400px;
+	height: 600px;
+}
+div.userinfo {
+	border: 0px solid blue;
+	display: inline-block;
+	width:397px;
+	height: 100px;
+	background-color:  #66ff66;
+}
+
+div.menu {
+	border: 0px solid yellow;
+	width: 397px;
+	height: 50px;
+	background-color: #66ff66;
+	display: inline-block;
+}
+
+div.input-group {
+	
+	background-color: #66ff66;
+}
+
+div.tflist {
+	<!--border: 1px solid green;-->
+	width:415px;
+	height: 412px;
+	display:inline-block;
+	overflow:auto;
+	background-color: white;
+}
+
+div.userinfoside {
+	border: 0px solid black;
+	float: left;
+	width: 100px;
+	height: 100px;
+}
+
+div.userinfotop {
+	border: 0px solid blue;
+	margin-left: 100px;
+	width: 300px;
+	height: 50px;
+	padding-top: 13px;
+}
+
+div.userinfobottom {
+	border: 0px solid yellow;
+	margin-left: 100px;
+	width: 300px;
+	height: 50px;
+
+}
+
+div.dropdown {
+	border: 0px solid yellow;
+	float: right;
+	margin-left: 200px;
+}
+
+img.mainuserimg {
+	border: 0px solid yellow;
+	width: 60px;
+	height: 60px;
+	border-radius: 50%;
+}
+
+span.username {
+	<!--border: 0px solid black;-->
+	font-weight: bold;
+	font-size: 15pt;
+	float: left;
+}
+
+span.userjobgrade {
+	<!--border: 0px solid black;-->
+	font-weight: bold;
+	font-size: 10pt;
+	padding-top: 5px;
+	float: left;
+	margin-left: 5px;
+}
+
+span.usermessage {
+	padding-left: 30;
+}
+
+div.menubtn {
+	width: 50px;
+	height: 50px;
+}
+
+img.menuimg {
+	width: 50px;
+	height: 50px;
+}
+
+div.dropdown {
+	float: right;
+}
+
+div.well {
+	width: 200px;
+	font-size: 15px;
+	margin: auto;
+	margin-left: 0;
+	padding: auto;
+	height: 50px;
+}
+
+input.form-control {
+	margin-left: 20px;
+	width: 300px;
+}
+
+button.btn-default {
+	
+	margin-right: 40px;
+	float: right;
+}
+
+div.memberList {
+	border-bottom: 1px solid gray;
+	width: 380px;
+	height: 100px;
+	
+}
+
+div.constatus {
+	border: 0px solid red;
+	width: 120px;
+	height: 100px;
+	padding-top:20px;
+	float: left;
+}
+
+div.userinforightside {
+	border: 0px solid red;
+	width: 260px;
+	height: 50px;
+	margin-left: 120px;
+	padding-top: 13px;
+}
+
+div.userinfobottom2 {
+	border: 0px solid blue;
+	width: 260px;
+	height: 50px;
+	margin-left: 120px;
+	padding-top: 13px;
+}
+
+img.constatus {
+	border: solie 3px black;	
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	margin-left: 10px;
+}
+
+form.select {
+	border: 0px solid blue;
+	float: left;
+	width: 80px;
+	height: 25px;
+	margin-left: 5px;
+}

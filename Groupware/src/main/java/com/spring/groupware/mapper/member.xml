@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="member">
+
+	<!-- 로그인페이지 - 회사명 가져오기-->
+	<select id="companyName_select" resultType="String">
+		select com_name
+		from tbl_company 
+	</select>
+
+	
+	<!-- 회사정보페이지 - 회사 정보가져오기-->
+	<select id="companyInfo_select" resultType="com.spring.groupware.member.model.CompanyVO">
+		select com_name, com_address, registraion_num, business_type, com_ph, com_email
+		from tbl_company 
+	</select>
+
+	
+	<!-- 회사정보페이지 - 대표자명 가져오기-->
+	<select id="ceoName_select" resultType="String">
+		select mbr_name
+		from tbl_mbr 
+		where fk_rank_no=2
+	</select>
+
+
+	<!-- 회사정보페이지 - 관리자 정보가져오기 -->
+	<select id="adminInfo_select" resultType="com.spring.groupware.member.model.MemberVO">
+		select mbr_name, dept_detail, mbr_email, mbr_phone_number
+		from 
+		(        
+		select mbr_name, fk_dept_no, mbr_email, mbr_phone_number, fk_power_no
+		from tbl_mbr
+		)A left join tbl_dept B
+		on fk_dept_no = dept_no
+		where fk_power_no=2
+	</select>
+	
+	
+	<!-- 로그인페이지 - 로그인 정보 확인하기, session에 남길 로그인 정보 가져오기 -->
+	<select id="loginCheck" parameterType="HashMap" resultType="com.spring.groupware.member.model.MemberVO">
+		select mbr_seq, mbr_id, mbr_name, mbr_email, mbr_pwd, mbr_com_number, mbr_phone_number, mbr_birthday, mbr_stsmsg, mbr_stsconnect, mbr_img
+		     , trunc((mbr_pwd_changeday-(select sysdate from dual))/30) as pwdChangeGap, nvl(mbr_photo,'0'), mbr_remainBreak, nvl(mbr_sign,'0'), rank_detail, power_detail, dept_detail
+		from 
+		(        
+		select mbr_seq, mbr_id, mbr_name, fk_power_no, fk_rank_no, fk_dept_no, mbr_email, mbr_com_number, mbr_phone_number, mbr_stsmsg, mbr_stsconnect, mbr_img
+		     , mbr_birthday, mbr_pwd_changeday, mbr_photo, mbr_remainBreak, mbr_sign, mbr_pwd, mbr_status, mbr_registerday
+		from tbl_mbr
+		)A left join tbl_dept B
+		on fk_dept_no = dept_no
+		join tbl_rank CS
+		on fk_rank_no = rank_no
+		join tbl_power D
+		on fk_power_no = power_no
+		where mbr_id=#{id} and mbr_pwd=#{pwd} and mbr_status='1'
+	</select> 
+	
+	
+	<!-- 로그인페이지 - 로그인 히스토리에 기록하기 -->
+	<insert id="loginHistory" parameterType="HashMap">
+		insert into tbl_loginhistory(fk_mbr_seq, login_ip)
+		values (#{mbr_seq},#{ip})
+	</insert> 
+	
+	
+	<!-- 인덱스페이지 - 로그아웃 히스토리에 기록하기 -->
+	<insert id="logoutHistory" parameterType="int">
+		insert into tbl_logouthistory(fk_mbr_seq)
+		values (#{mbr_seq})
+	</insert> 
+	
+	
+	<!-- 조직도페이지 - 조직도용 정보 가져오기 -->
+	<resultMap type="HashMap" id="getChartInfoMap">
+		<result property="rank_detail" column="rank_detail" javaType="String" />
+		<result property="dept_detail" column="dept_detail" javaType="String" />
+		<result property="mbr_name" column="mbr_name" javaType="String" />
+	</resultMap>
+	
+
+	<!-- 참조자, 결재라인  - 전체 사원정보 가져오기 -->
+	<select id="getChartInfo" parameterType="String" resultMap="getChartInfoMap">
+	    select mbr_seq, mbr_name, dept_detail, rank_detail
+		from 
+		(        
+		select mbr_seq, mbr_name, fk_dept_no, fk_rank_no 
+		from tbl_mbr
+		)A left join tbl_dept B
+		on fk_dept_no = dept_no
+		left join tbl_rank C
+		on fk_rank_no = rank_no
+		<if test="value neq ''">
+			where fk_dept_no in (#{value},'5')
+		</if>
+		<if test="value eq ''"></if>
+	</select>
+	
+	
+	<!-- 비밀번호 변경하기 -->
+	<insert id="changePwd" parameterType="HashMap">
+		update tbl_mbr set mbr_pwd=#{newPwd1}, mbr_pwd_changeday=sysdate
+		where mbr_seq=#{mbr_seq}
+	</insert>
+	
+</mapper>

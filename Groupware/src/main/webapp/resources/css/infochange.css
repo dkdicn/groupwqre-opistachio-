@@ -1,0 +1,24 @@
+@charset "UTF-8";
+
+div.snsmaincontainer {
+	border: 1px solid black;
+	display: inline-block;
+	width: 400px;
+	height: 600px;
+}
+
+div.form-group {
+	border: 0px solid red;
+	width: 400px;
+	height: 100px;
+}
+
+label.lform {
+	font-size: 20px;
+	font-weight: bold;
+}
+
+div.form-control {
+	width: 300px;
+	height: 60px;
+}

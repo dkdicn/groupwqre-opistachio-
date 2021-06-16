@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="commute">
+
+	<!-- === 날짜로 조회 === -->
+<!-- 	<select id="cmtListWithPaging" parameterType="String" resultType="String">
+		select M.mbr_id, L.login_day, L.logout_day
+		from
+		(
+				select I.fk_mbr_seq, I.login_day as login_day, o.logout_day as logout_day
+				from
+			(
+				select distinct fk_mbr_seq, TO_CHAR(login_day, 'YYYYMMDD') as login_day
+				from tbl_loginhistory
+			) I
+			join
+			(
+				select distinct fk_mbr_seq, TO_CHAR(logout_day, 'YYYYMMDD') as logout_day
+				from tbl_logouthistory
+			) O
+				on I.fk_mbr_seq = O.fk_mbr_seq 
+				where I.login_day= O.logout_day
+		) L
+		join
+		(
+			select mbr_seq, mbr_id
+			from tbl_mbr
+		) M
+		on L.fk_mbr_seq = M.mbr_seq
+		where L.login_day=#{sysdate}
+		order by L.login_day asc
+	</select>
+ -->
+
+	<!-- === 사원번호로 조회 ===
+	<select id="selectCmtHistory" parameterType="String" >
+		
+		select M.mbr_id, L.login_day, L.logout_day
+		from
+		(
+		select I.fk_mbr_seq, I.login_day as login_day, o.logout_day as logout_day
+		from
+		(
+		select distinct fk_mbr_seq, TO_CHAR(login_day, 'YYYYMMDD') as login_day
+		from tbl_loginhistory
+		where fk_mbr_seq=5
+		) I
+		join
+		(
+		select distinct fk_mbr_seq, TO_CHAR(logout_day, 'YYYYMMDD') as logout_day
+		from tbl_logouthistory
+		where fk_mbr_seq=#{mbr_seq}
+		) O
+		on I.fk_mbr_seq = O.fk_mbr_seq 
+		where I.fk_mbr_seq = 5 and I.login_day= O.logout_day
+		) L
+		join
+		(
+		select mbr_seq, mbr_id
+		from tbl_mbr
+		) M
+		on L.fk_mbr_seq = M.mbr_seq
+		where M.mbr_seq=#{mbr_seq}
+		order by L.login_day asc
+	
+	</select>
+	 -->
+	
+</mapper>

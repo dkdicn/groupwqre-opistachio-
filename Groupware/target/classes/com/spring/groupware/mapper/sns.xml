@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ==== #29. mapper 기본설정 ==== -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sns">
+
+	<select id="getmemberList" resultType="com.spring.groupware.member.model.MemberVO">
+		select mbr_seq, mbr_id, mbr_name, mbr_stsmsg, mbr_stsconnect, mbr_img
+		  	 ,rank_detail, power_detail, dept_detail
+		from 
+		(        
+		select mbr_seq, mbr_id, mbr_name, fk_power_no, fk_rank_no, fk_dept_no, mbr_email, mbr_com_number,mbr_phone_number,  mbr_stsmsg, mbr_stsconnect, mbr_img
+		     , mbr_birthday, mbr_pwd_changeday, mbr_photo, mbr_sign, mbr_pwd, mbr_status, mbr_registerday
+		from tbl_mbr
+		)A left join tbl_dept B
+		on fk_dept_no = dept_no
+		join tbl_rank CS
+		on fk_rank_no = rank_no
+		join tbl_power D
+		on fk_power_no = power_no
+	</select>
+	
+	<select id="memberListSearch" parameterType="HashMap" resultType="com.spring.groupware.member.model.MemberVO" >
+		select mbr_seq, mbr_id, mbr_name, mbr_stsmsg, mbr_stsconnect, mbr_img
+		  	 ,rank_detail, power_detail, dept_detail
+		from 
+		(        
+		select mbr_seq, mbr_id, mbr_name, fk_power_no, fk_rank_no, fk_dept_no, mbr_email, mbr_com_number,mbr_phone_number,  mbr_stsmsg, mbr_stsconnect, mbr_img
+		     , mbr_birthday, mbr_pwd_changeday, mbr_photo, mbr_sign, mbr_pwd, mbr_status, mbr_registerday
+		from tbl_mbr
+		)A left join tbl_dept B
+		on fk_dept_no = dept_no
+		join tbl_rank CS
+		on fk_rank_no = rank_no
+		join tbl_power D
+		on fk_power_no = power_no
+		<if test='searchWord != "" '>
+			where lower(mbr_name) = lower(#{searchWord})
+		</if>	
+	</select>
+	
+	<update id="infochange" parameterType="com.spring.groupware.member.model.MemberVO" >
+		update tbl_mbr 
+		set mbr_name=#{mbr_name}, mbr_stsmsg= #{mbr_stsmsg, jdbcType=VARCHAR}            
+		where mbr_id = #{mbr_id}
+	</update>
+	
+	<update id="statuschange" parameterType="com.spring.groupware.member.model.MemberVO">
+		update tbl_mbr 
+		set mbr_stsconnect=#{mbr_stsconnect}              
+		where mbr_id = #{mbr_id}
+	</update>
+	
+	<!-- <select id="getTalkroomlist" parameterType="HashMap" resultType="com.spring.groupware.sns.model.TalkroomVO">
+		select room_name, room_seq
+		from tbl_talkroom M join tbl_talkroom_mbr R
+		on M.room_seq = R.fk_room_seq
+		where R.fk_mbr_id = #{fk_mbr_id}
+	</select> -->
+	
+	<update id="onlinestatus" parameterType="com.spring.groupware.member.model.MemberVO">
+		update tbl_mbr 
+		set mbr_stsconnect= 1	                
+		where mbr_id = #{mbr_id}
+	</update>
+	
+
+
+</mapper>

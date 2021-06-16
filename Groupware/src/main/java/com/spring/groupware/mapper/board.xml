@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ==== #29. mapper 기본설정 ==== -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- ==== #29. 루트 엘리먼트 & 네임스페이스 설정(프로젝트 전체내에서 유일해야 한다.) ==== -->
+<mapper namespace="board">
+   
+   <!-- ========================= 전체공지 ============================== -->  
+   
+   <!-- === 글쓰기 === -->
+   <insert id="comAdd" parameterType="com.spring.groupware.board.model.CnoticeVO">
+   		insert into tbl_comnotice(cnotice_seq, fk_boardno, fk_mbr_seq, ctitle, ccontent, cwritedate, chit)
+   		values(cnotice_seq.nextval, 1, #{fk_mbr_seq}, #{ctitle}, #{ccontent}, default, default)
+   </insert>
+   
+   	<!-- === 전체 글목록 보여주기 == -->
+   	<select id="comListSearch" resultType="com.spring.groupware.board.model.CnoticeVO">
+	   	select cnotice_seq, fk_mbr_seq, ctitle, ccontent, to_char(cwritedate, 'yyyy-mm-dd hh24:mi:ss') as cwritedate, chit
+		from tbl_comnotice
+		<if test='searchType != "" and searchWord != ""'>
+			where lower(${searchType}) like '%' || lower(#{searchWord}) || '%'
+		</if>  
+		order by cnotice_seq desc
+   	</select>
+   
+   	<!-- === 글조회수 1증가 하기  === -->
+   	<update id="setComAddHit" parameterType="String">
+   		update tbl_comnotice set chit = chit+1
+   		where cnotice_seq = #{cnotice_seq} 
+   	</update>
+   	
+   	<!--  == 글 1개 보여주기  ==  -->
+   	<select id="getComView" parameterType="String" resultType="com.spring.groupware.board.model.CnoticeVO">
+	   	select previousseq, previoustitle    
+	     , cnotice_seq, fk_mbr_seq, ctitle, ccontent, cwritedate, chit
+	     , nextseq, nexttitle
+		from
+		(
+		    select lag(cnotice_seq,1) over (order by cnotice_seq desc) as nextseq
+		         , lag(ctitle,1) over (order by cnotice_seq desc) as nexttitle
+		         
+		         , cnotice_seq, fk_mbr_seq, ctitle, ccontent
+		         , to_char(cwritedate, 'yyyy-mm-dd hh24:mi:ss') as cwritedate, chit
+		         
+		         , lead(cnotice_seq,1) over (order by cnotice_seq desc) as previousseq
+		         , lead(ctitle,1) over (order by cnotice_seq desc) as previoustitle
+		         
+		    from tbl_comnotice
+		) V
+		where V.cnotice_seq = #{cnotice_seq}
+   	</select>
+   	
+   	<!-- === 1개글 수정하기 === -->
+   	<update id="editCom" parameterType="com.spring.groupware.board.model.CnoticeVO">
+   		update tbl_comnotice set ctitle = #{ctitle}
+   						   	   , ccontent = #{ccontent}
+		where cnotice_seq = #{cnotice_seq}
+   	</update>
+   	
+   	<!-- === 1개글 삭제하기 === -->
+   	<delete id="delCom" parameterType="HashMap">
+   		delete from tbl_comnotice
+   		where cnotice_seq=#{cnotice_seq}
+   	</delete>
+   
+   <!-- === 검색하기 === -->
+    <select id="comWordSearchShow" parameterType="HashMap" resultType="String">
+	   	select ${searchType}
+		from tbl_comnotice
+		where lower(${searchType}) like '%' || lower(#{searchWord}) || '%'
+		order by cnotice_seq desc
+  	</select>
+   
+
+   	 <!-- === 총 게시물 건수(totalCount) === --> 
+   	 <select id="getComTotalCount" parameterType="HashMap" resultType="int">
+   	 	select count(*)
+   	 	from tbl_comnotice
+   	 	<if test='searchWord != ""'> 
+   	 		where lower(${searchType}) like '%' || lower(#{searchWord}) || '%'
+   	 	</if>
+   	 </select>
+   	    	 
+   	    	 
+   	 <!-- === 페이징 처리한 글목록 가져오기(검색이 있든지, 검색이 없든지 모두 다 포함한 것) -->   	 
+   	 <select id="comListSearchWithPaging" parameterType="HashMap" resultType="com.spring.groupware.board.model.CnoticeVO">
+	   	select cnotice_seq, fk_mbr_seq, ctitle, ccontent, cwritedate, chit
+		from 
+		(
+		    select row_number() over(order by cnotice_seq desc) AS rno,
+		           cnotice_seq, fk_mbr_seq, ctitle, ccontent, chit,
+		           to_char(cwritedate, 'yyyy-mm-dd hh24:mi:ss') as cwritedate
+		    from tbl_comnotice
+		    <if test='searchWord != ""'>
+		    	where lower(${searchType}) like '%' || lower(#{searchWord}) || '%'
+			</if>
+		) V
+		where rno between #{startRno} and #{endRno}   	 
+   	 </select>
+   	 
+   	 
+   <!-- ========================= 부서공지 ============================== -->  
+
+   <!-- === 글쓰기 === -->
+   <insert id="deptAdd" parameterType="com.spring.groupware.board.model.DnoticeVO">
+   		insert into tbl_deptnotice(dnotice_seq, fk_boardno, fk_mbr_id, fk_dept_detail, dtitle, dcontent, dwritedate, dhit)
+   		values(dnotice_seq.nextval, 2, #{fk_mbr_id}, #{fk_dept_detail}, #{dtitle}, #{dcontent}, default, default)
+   </insert>
+   
+   	<!-- === 전체 글목록 보여주기 == -->
+   	<select id="deptListNoSearch" resultType="com.spring.groupware.board.model.DnoticeVO">
+	   	select dnotice_seq, fk_mbr_id, dept_detail, dtitle, dcontent, to_char(dwritedate, 'yyyy-mm-dd hh24:mi:ss') as dwritedate, dhit
+		from tbl_deptnotice N JOIN tbl_dept D
+		on N.fk_dept_no = d.dept_no
+		order by dnotice_seq desc
+   	</select>
+   
+   	<!-- === 글조회수 1증가 하기  === -->
+   	<update id="setDeptAddHit" parameterType="String">
+   		update tbl_deptnotice set dhit = dhit+1
+   		where dnotice_seq = #{dnotice_seq} 
+   	</update>
+   	
+   	<!--  == 글 1개 보여주기  ==  -->
+   	<select id="getDeptView" parameterType="String" resultType="com.spring.groupware.board.model.DnoticeVO">
+	   	select previousseq, previoustitle    
+	     , dnotice_seq, fk_mbr_id, fk_dept_detail, dtitle, dcontent, dwritedate, dhit
+	     , nextseq, nexttitle
+		from
+		(
+		    select lag(dnotice_seq,1) over (order by dnotice_seq desc) as nextseq
+		         , lag(dtitle,1) over (order by dnotice_seq desc) as nexttitle
+		         
+		         , dnotice_seq, fk_mbr_id, fk_dept_detail, dtitle, dcontent
+		         , to_char(dwritedate, 'yyyy-mm-dd hh24:mi:ss') as dwritedate, dhit
+		         
+		         , lead(dnotice_seq,1) over (order by dnotice_seq desc) as previousseq
+		         , lead(dtitle,1) over (order by dnotice_seq desc) as previoustitle
+		         
+		    from tbl_deptnotice
+		) V
+		where V.dnotice_seq = #{dnotice_seq}
+   	</select>
+   	
+   	<!-- === 1개글 수정하기 === -->
+   	<update id="editDept" parameterType="com.spring.groupware.board.model.DnoticeVO">
+   		update tbl_deptnotice set dtitle = #{dtitle}
+   						   	   , dcontent = #{dcontent}
+		where dnotice_seq = #{dnotice_seq}
+   	</update>
+   	
+   	<!-- === 1개글 삭제하기 === -->
+   	<delete id="delDept" parameterType="HashMap">
+   		delete from tbl_deptnotice
+   		where dnotice_seq=#{dnotice_seq}
+   	</delete>
+   	
+   	<!-- === 검색하기 === -->
+    <select id="deptWordSearchShow" parameterType="HashMap" resultType="String">
+	   	select ${searchType}
+		from tbl_deptnotice
+		where lower(${searchType}) like '%' || lower(#{searchWord}) || '%'
+		order by dnotice_seq desc
+  	</select>
+
+   	 <!-- === 총 게시물 건수(totalCount) === --> 
+   	 <select id="getDeptTotalCount" parameterType="HashMap" resultType="int">
+   	 	select count(*)
+   	 	from tbl_deptnotice
+   	 	<if test='searchWord != ""'> 
+   	 		where lower(${searchType}) like '%' || lower(#{searchWord}) || '%'
+   	 	</if>
+   	 </select>
+   	    	 
+   	    	 
+   	 <!-- === 페이징 처리한 글목록 가져오기(검색이 있든지, 검색이 없든지 모두 다 포함한 것) -->   	 
+   	 <select id="deptListSearchWithPaging" parameterType="HashMap" resultType="com.spring.groupware.board.model.DnoticeVO">
+	   	select dnotice_seq, fk_mbr_id, dtitle, dcontent, dwritedate, dhit
+		from 
+		(
+		    select row_number() over(order by dnotice_seq desc) AS rno,
+		           dnotice_seq, fk_mbr_id, fk_dept_detail, dtitle, dcontent, dhit,
+		           to_char(dwritedate, 'yyyy-mm-dd hh24:mi:ss') as dwritedate
+		    from tbl_deptnotice
+		    <if test='searchWord != ""'>
+		    	where lower(${searchType}) like '%' || lower(#{searchWord}) || '%'
+			</if>
+		) V
+		where rno between #{startRno} and #{endRno}
+			  and fk_dept_detail=#{fk_dept_detail}   	 
+   	 </select>
+   	 
+
+   <!-- ========================= 공통서식 ============================== -->  
+
+   <!-- === 글쓰기(파일첨부 없는) === -->
+   <insert id="formAdd" parameterType="com.spring.groupware.board.model.FormboardVO">
+   		insert into tbl_formboard(form_seq, fk_boardno, fk_mbr_seq, ftitle, fcontent, fwritedate, fhit)
+   		values(form_seq.nextval, 3, #{fk_mbr_seq}, #{ftitle}, #{fcontent}, default, default)
+   </insert>
+ 
+    <!-- === 파일첨부 있는 글쓰기 === -->
+   <insert id="add_withFile" parameterType="com.spring.groupware.board.model.FormboardVO">
+   		insert into tbl_formboard(form_seq, fk_boardno, fk_mbr_seq, ftitle, fcontent, fwritedate, fhit, fileName, orgFilename, fileSize)
+   		values(form_seq.nextval, 3, #{fk_mbr_seq}, #{ftitle}, #{fcontent}, default, default, #{fileName}, #{orgFilename}, #{fileSize})
+   </insert>
+     
+   	<!-- === 전체 글목록 보여주기 == -->
+   	<select id="formListNoSearch" resultType="com.spring.groupware.board.model.FormboardVO">
+	   	select form_seq, fk_mbr_seq, ftitle, fcontent, to_char(fwritedate, 'yyyy-mm-dd hh24:mi:ss') as fwritedate, fhit
+		from tbl_formboard
+		order by form_seq desc
+   	</select>
+   
+   	<!-- === 글조회수 1증가 하기  === -->
+   	<update id="setFormAddHit" parameterType="String">
+   		update tbl_formboard set fhit = fhit+1
+   		where form_seq = #{form_seq} 
+   	</update>
+   	
+   	<!--  == 글 1개 보여주기  ==  -->
+   	<select id="getFormView" parameterType="String" resultType="com.spring.groupware.board.model.FormboardVO">
+	   	select previousseq, previoustitle    
+		     , form_seq, fk_mbr_seq, ftitle, fcontent, fwritedate, fhit
+		     , nextseq, nexttitle
+		     , fileName, orgFilename, fileSize
+		from
+		(
+		    select lag(form_seq,1) over (order by form_seq desc) as nextseq
+		         , lag(ftitle,1) over (order by form_seq desc) as nexttitle
+		         
+		         , form_seq, fk_mbr_seq, ftitle, fcontent
+		         , to_char(fwritedate, 'yyyy-mm-dd hh24:mi:ss') as fwritedate, fhit
+		         , fileName, orgFilename, fileSize
+		         
+		         , lead(form_seq,1) over (order by form_seq desc) as previousseq
+		         , lead(ftitle,1) over (order by form_seq desc) as previoustitle
+		         
+		    from tbl_formboard
+		) V
+		where V.form_seq = #{form_seq}
+   	</select>
+   	
+   	<!-- === 1개글 수정하기 === -->
+   	<update id="editForm" parameterType="com.spring.groupware.board.model.FormboardVO">
+   		update tbl_formboard set ftitle = #{ftitle}, fcontent = #{fcontent},
+   								 fileName  = #{fileName} , orgFilename = #{orgFilename}, fileSize = #{fileSize}
+		where form_seq = #{form_seq}
+   	</update>
+   	
+   	<!-- === 1개글 삭제하기 === -->
+   	<delete id="delForm" parameterType="HashMap">
+   		delete from tbl_formboard
+   		where form_seq=#{form_seq}
+   	</delete>
+   	
+   	<!-- === 검색하기 === -->
+    <select id="formWordSearchShow" parameterType="HashMap" resultType="String">
+	   	select ${searchType}
+		from tbl_formboard
+		where lower(${searchType}) like '%' || lower(#{searchWord}) || '%'
+		order by form_seq desc
+  	</select>
+
+   	 <!-- === 총 게시물 건수(totalCount) === --> 
+   	 <select id="getFormTotalCount" parameterType="HashMap" resultType="int">
+   	 	select count(*)
+   	 	from tbl_formboard
+   	 	<if test='searchWord != ""'> 
+   	 		where lower(${searchType}) like '%' || lower(#{searchWord}) || '%'
+   	 	</if>
+   	 </select>
+   	    	 
+   	    	 
+   	 <!-- === 페이징 처리한 글목록 가져오기(검색이 있든지, 검색이 없든지 모두 다 포함한 것) -->   	 
+   	 <select id="formListSearchWithPaging" parameterType="HashMap" resultType="com.spring.groupware.board.model.FormboardVO">
+	   	select form_seq, fk_mbr_seq, ftitle, fcontent, fwritedate, fhit, fileName
+		from 
+		(
+		    select row_number() over(order by form_seq desc) AS rno,
+		           form_seq, fk_mbr_seq, ftitle, fcontent, fhit,
+		           to_char(fwritedate, 'yyyy-mm-dd hh24:mi:ss') as fwritedate,
+		           fileName
+		    from tbl_formboard
+		    <if test='searchWord != ""'>
+		    	where lower(${searchType}) like '%' || lower(#{searchWord}) || '%'
+			</if>
+		) V
+		where rno between #{startRno} and #{endRno}   	 
+   	 </select>      	
+</mapper>

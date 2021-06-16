@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ==== #29. mapper 기본설정 ==== -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- ==== #29. 루트 엘리먼트 & 네임스페이스 설정(프로젝트 전체내에서 유일해야 한다.) ==== -->
+<mapper namespace="schedule">
+	
+	<!-- === 일정번호 채번해오기 === -->
+	<select id="goScdno" resultType="int">
+		select schedule_seq.nextval
+		from dual
+	</select>
+	
+	<!-- === 주소록 리스트 가져오기 === -->
+	<select id="getAddrList" parameterType="String" resultType="com.spring.groupware.addrlist.model.AddrVO">
+		select addr_seq, mbr_name, mbr_email, dept_name, mbr_phone_number
+		from tbl_address
+		order by addr_seq
+	</select>
+	
+	<!-- === 검색한 주소 목록 보여주기 === -->
+	<select id="addrList_Search" parameterType="HashMap" resultType="com.spring.groupware.addrlist.model.AddrVO">
+		select addr_seq, mbr_name, mbr_email, dept_name, mbr_phone_number
+		from tbl_address
+		<if test="searchType != '' and searchWord != '' ">
+			where lower(${searchType}) like '%' || lower(#{searchWord}) || '%'
+		</if>
+		order by addr_seq
+	</select>
+	
+	<!-- === 일정 추가하기 === -->
+	<insert id="scdAdd" parameterType="com.spring.groupware.schedule.model.ScheduleVO">
+		insert into tbl_schedule(scdno, fk_scdno2, fk_mbr_seq, scdsubject, scdstartdate, scdenddate, place, attendance)
+		values(#{scdno}, to_number(#{fk_scdno2}), to_number(#{fk_mbr_seq}), #{scdsubject}
+		, to_date(#{scdstartdate} || ' ' || #{scdstartTm}, 'yyyy-mm-dd hh24:mi'), to_date(#{scdenddate} || ' ' || #{scdendTm},'yyyy-mm-dd hh24:mi')
+		,#{place}, #{attendance})
+	</insert>
+	
+	<!-- === 수정해야할 글 1개 가져오기 === -->
+	<select id="getViewScd" parameterType="String" resultType="com.spring.groupware.schedule.model.ScheduleVO">
+		select scdno, fk_scdno2, fk_mbr_seq, scdsubject, scdstartdate, scdenddate, place, attendance
+		from tbl_schedule
+		where scdno = to_number(#{scdno})
+	</select>
+	
+	<!-- === 일정 수정하기 === -->
+	<update id="editScd" parameterType="com.spring.groupware.schedule.model.ScheduleVO">
+		update tbl_schedule set scdsubject = #{scdsubject}, scdstartdate = to_date(#{scdstartdate} || ' ' || #{scdstartTm}, 'yyyy-mm-dd hh24:mi'), scdenddate = to_date(#{scdenddate}|| ' ' || #{scdendTm} ,'yyyy-mm-dd hh24:mi'), place= #{place}, attendance= #{attendance}
+		where scdno = to_number(#{scdno})
+	</update>
+	
+	<!-- === 일정 삭제하기 === -->
+	<delete id="delScd" parameterType="String">
+		delete from tbl_schedule
+		where scdno = to_number(#{scdno})
+	</delete>
+	
+	<!-- === 캘린더에 일정 보여주기 === -->
+	<resultMap type="HashMap" id="showScdMap">
+		<result property="scdno" column="scdno" javaType="String"/>
+		<result property="fk_scdno2" column="fk_scdno2" javaType="String"/>
+		<result property="scdsubject" column="scdsubject" javaType="String"/>
+		<result property="scdstartdate" column="scdstartdate" javaType="String"/>
+		<result property="scdenddate" column="scdenddate" javaType="String"/>
+	</resultMap>
+	
+	<select id="showScd" parameterType="HashMap" resultMap="showScdMap">
+		select scdno, fk_scdno2, scdsubject, scdstartdate, scdenddate
+		from
+		(select scdno, fk_scdno2, scdsubject, scdstartdate, scdenddate
+		from tbl_schedule S join tbl_mbr M
+		on S.fk_mbr_seq = M.mbr_seq
+		where mbr_id = #{userid}
+		or fk_scdno2 = 0 or fk_scdno2 = 1
+		minus
+		select scdno, fk_scdno2, scdsubject, scdstartdate, scdenddate
+		from tbl_schedule S join tbl_mbr M
+		on S.fk_mbr_seq = M.mbr_seq
+		join tbl_dept D
+		on M.fk_dept_no = D.dept_no
+		where D.dept_detail != #{dept_detail} and fk_scdno2 = 1) T
+	</select>
+	
+	<!-- === 모든 일정 삭제하기 === -->
+	<delete id="delAll" parameterType="int">
+		delete from tbl_schedule
+		where fk_mbr_seq = #{mbr_seq}
+	</delete>
+	
+	<!-- === 나의 일정 개수 확인하기 === -->
+	<select id="cntMyTotalScd" parameterType="int" resultType="int">
+		select count(*)
+		from tbl_schedule
+		where fk_mbr_seq = #{mbr_seq}
+	</select>
+	
+	
+	<!-- ========================================================================================================== -->
+	
+	<!-- === 회의실 예약 번호 채번하기 === -->
+	<select id="getNum" resultType="int">
+		select mtrhistory_seq.nextval
+		from dual
+	</select>
+	
+	<!-- === 회의실 예약하기 === -->
+	<insert id="resvMtrEnd" parameterType="com.spring.groupware.schedule.model.MtrHistoryVO">
+		insert into tbl_mtrhistory(usemtrno, fk_scdno, fk_mtrno, booker, mtrsubject, starttime, endtime)
+		values(#{usemtrno}, #{fk_scdno}, #{fk_mtrno}, #{booker}, #{mtrsubject}, to_date(#{regDate} || ' ' || #{starttime},'yyyy-mm-dd hh24:mi'), to_date(#{regDate} || ' ' || #{endtime},'yyyy-mm-dd hh24:mi'))
+	</insert>
+	
+	<!-- === 일정명 가져오기 === -->
+	<select id="getScdSubject" parameterType="String" resultType="String">
+		select scdsubject
+		from tbl_schedule
+		where scdno = #{scdno}
+	</select>
+	
+	<!-- === 회의실명 가져오기 === -->
+	<select id="getMtrName" parameterType="String" resultType="String">
+		select mtrname
+		from tbl_mtr
+		where mtrno = #{fk_mtrno}
+	</select>
+	
+	<!-- === 회의실 예약취소(삭제) === -->
+	<delete id="delMtrReg" parameterType="String">
+		delete from tbl_mtrhistory
+		where usemtrno = to_number(#{usemtrno})
+	</delete>
+	
+	<!-- === 회의실 예약현황 보여주기(구글 차트) === -->
+	<resultMap type="HashMap" id="goRegMtrMap">
+		<result property="mtrname" column="mtrname" javaType="String"/>
+		<result property="mbr_name" column="mbr_name" javaType="String"/>
+		<result property="mtrsubject" column="mtrsubject" javaType="String"/>
+		<result property="starttime" column="starttime" javaType="String"/>
+		<result property="endtime" column="endtime" javaType="String"/>
+	</resultMap>
+	
+	<select id="goRegMtr" parameterType="String" resultMap="goRegMtrMap">
+		select mtrname, mbr_name, mtrsubject, starttime, endtime
+		from tbl_mbr B join tbl_schedule S
+		on B.mbr_seq = S.fk_mbr_seq
+		join tbl_mtrhistory H
+		on S.scdno = H.fk_scdno
+		join tbl_mtr M
+		on H.fk_mtrno = M.mtrno
+	</select>
+	
+	<!-- === 해당 접속자가 예약한 모든 회의실 예약 내역 가져오기 === -->
+	<select id="getMtrResvList" parameterType="String" resultType="com.spring.groupware.schedule.model.MtrHistoryVO">
+		select usemtrno, mtrname, booker, mtrsubject, starttime, endtime 
+		from tbl_mtrhistory H join tbl_mtr M
+		on H.fk_mtrno = M.mtrno 
+		where booker = #{userid}
+	</select>
+	
+	<!-- 체크된 예약 내역 삭제하기 -->
+	<delete id="delOneResv" parameterType="String">
+		delete from tbl_mtrhistory
+		where usemtrno = #{usemtrno}
+	</delete>
+	
+</mapper>

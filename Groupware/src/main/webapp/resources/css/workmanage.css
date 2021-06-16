@@ -1,0 +1,66 @@
+@charset "UTF-8";
+
+
+div.workcontainer {
+	 /* border: 1px solid blue; */
+	 margin-left: 280px;
+}
+
+/* 업무 상세 조회, 업무 등록 테이블  */
+table.workShowtable tr>td:nth-child(1),
+table.workRegtable tr>td:nth-child(1) {
+	background: #f2f2f2;
+	text-align: right;
+	padding-right: 15px;
+	width: 18%;
+}
+
+table.workShowtable tr>td:nth-child(2),
+table.workRegtable tr>td:nth-child(2) {
+	background: white;
+	width: 40%;
+}
+
+table.workShowtable tr>td:nth-child(3) {
+	background: #f2f2f2;
+	text-align: right;
+	padding-right: 20px;
+	width: 14%;
+}
+
+table.workShowtable tr>td:nth-child(4) {
+	background: white;
+	width: 40%;
+}
+
+tr#workShwoBtn > th,
+tr#workShwoBtn > td,
+tr#workRegBtn > td {
+	text-align: right;
+	background: none;
+}
+
+
+span.star {
+	color: red;
+	margin-right: 2px;
+}
+
+.ui-datepicker-trigger {
+	width: 25px;
+	height: 25px;
+	margin-left: 5px;
+}
+
+input[name=workType] {
+	margin-left: 10px;
+}
+
+button.workStatus {
+	width: 100px;
+	height: 25px;
+	color: white;
+	border: none;
+}
+
+

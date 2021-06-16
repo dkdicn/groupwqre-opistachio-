@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ======= #23. tiles 레이아웃 설정하기 ======= -->
+
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 2.1//EN"
+       "http://tiles.apache.org/dtds/tiles-config_2_1.dtd">
+
+<tiles-definitions>
+  
+   <!-- ==== tiles 를 사용하는 레이아웃(content,index) 설정 시작 ==== -->
+   <definition name="layout-tiles1"  template="/WEB-INF/tiles/layout/layout-tiles1.jsp"> 
+      <put-attribute name="content" value="" />
+      <put-attribute name="indexinfo"  value="/WEB-INF/views/index.jsp" />
+   </definition>
+   
+   <definition name="*.tiles1" extends="layout-tiles1">
+      <put-attribute name="content" value="/WEB-INF/views/tiles1/{1}.jsp"/>
+   </definition>
+   <definition name="*/*.tiles1" extends="layout-tiles1">
+      <put-attribute name="content" value="/WEB-INF/views/tiles1/{1}/{2}.jsp"/>
+   </definition>
+   <definition name="*/*/*.tiles1" extends="layout-tiles1">
+      <put-attribute name="content" value="/WEB-INF/views/tiles1/{1}/{2}/{3}.jsp"/>
+   </definition>
+   
+   <!-- ==== tiles 를 사용하는 레이아웃(content,index,sidemenu) 설정 시작 ==== -->
+   <definition name="layout-tiles2"  template="/WEB-INF/tiles/layout/layout-tiles2.jsp"> 
+      <put-attribute name="content" value="" />
+      <put-attribute name="sideinfo"  value="/WEB-INF/tiles/views/index.jsp" />
+      <put-attribute name="sideMenu"  value="/WEB-INF/tiles/views/sideMenu.jsp" />
+   </definition>
+   
+   <definition name="*.tiles2" extends="layout-tiles2">
+      <put-attribute name="content" value="/WEB-INF/tiles2/tiles2/{1}.jsp"/>
+   </definition>
+   <definition name="*/*.tiles2" extends="layout-tiles2">
+      <put-attribute name="content" value="/WEB-INF/tiles2/tiles2/{1}/{2}.jsp"/>
+   </definition>
+   <definition name="*/*/*.tiles2" extends="layout-tiles2">
+      <put-attribute name="content" value="/WEB-INF/tiles2/tiles2/{1}/{2}/{3}.jsp"/>
+   </definition>
+
+</tiles-definitions> 
